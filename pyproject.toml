@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sensorcov"
+version = "0.1.0"
+description = "Sensor coverage and blind-spot analysis across the articulation space of a hydraulic excavator"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "matplotlib>=3.8",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+# open3d carries Embree and the offscreen renderer.  Kept optional so the
+# kinematics and the config layer stay importable on a machine without it.
+raycast = ["open3d>=0.19"]
+dev = ["pytest>=8.0"]
+
+[tool.setuptools.packages.find]
+include = ["sensorcov*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+markers = [
+    "slow: runs a real sweep; minutes, not seconds",
+    "raycast: needs open3d installed",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501"]
