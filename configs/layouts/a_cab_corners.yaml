@@ -1,0 +1,14 @@
+name: a_cab_corners
+title: "A - two spinning lidars at the cab front corners"
+rationale: >
+  The cheapest arrangement that still gives two viewpoints.  Both units sit on
+  the operator cab, which on an excavator is offset to the left of centreline,
+  so the whole baseline lives on one side of the machine.  That is not an
+  oversight in the layout; it is the consequence of putting sensors where there
+  is already structure to bolt them to, and the study is here to price it.
+calibration_notes: >
+  Two fixed extrinsics on one rigid casting.  Calibrate once at build, and the
+  only thing that moves them afterwards is a collision.
+mounts:
+  - {sensor: spinning32, link: turret, xyz: [1.72, 1.40, 1.95], label: "cab front left"}
+  - {sensor: spinning32, link: turret, xyz: [1.72, 0.30, 1.95], label: "cab front right"}

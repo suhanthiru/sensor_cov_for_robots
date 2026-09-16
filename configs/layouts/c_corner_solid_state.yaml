@@ -1,0 +1,15 @@
+name: c_corner_solid_state
+title: "C - four corner solid-state lidars"
+rationale: >
+  No moving parts and four viewpoints spread to the corners of the upperframe,
+  which is the widest baseline the machine offers.  Each unit sees 70 degrees,
+  so the four windows have to be aimed to overlap; where they do not, the gap
+  is a persistent one that no amount of articulation will close.
+calibration_notes: >
+  Four fixed extrinsics, all on the same casting.  More units than A but the
+  same kind of calibration problem, solved four times.
+mounts:
+  - {sensor: solid_state, link: turret, xyz: [1.68, 1.32, 1.62],  yaw: 40.0,   pitch: 22.0, label: "front left"}
+  - {sensor: solid_state, link: turret, xyz: [1.68, -1.32, 1.62], yaw: -40.0,  pitch: 22.0, label: "front right"}
+  - {sensor: solid_state, link: turret, xyz: [-2.70, 1.28, 1.52], yaw: 140.0,  pitch: 22.0, label: "rear left"}
+  - {sensor: solid_state, link: turret, xyz: [-2.70, -1.28, 1.52], yaw: -140.0, pitch: 22.0, label: "rear right"}

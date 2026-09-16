@@ -1,0 +1,20 @@
+name: d_cab_and_boom
+title: "D - cab lidar plus a boom-mounted lidar"
+rationale: >
+  The only layout where a sensor rides the occluder.  A unit bolted to the boom
+  knee looks past the boom rather than around it, and it swings its viewpoint
+  through the work area as the machine articulates, so the regions it covers are
+  a function of joint state rather than fixed.  That is the point: the blind
+  volume it leaves should be transient where every other layout leaves it
+  persistent.
+calibration_notes: >
+  This is where the coverage is paid for.  The boom unit's extrinsic is a
+  function of joint state, so it is only ever as good as the boom and stick
+  encoders, and every FK error, every bit of pin wear and every bit of boom flex
+  under load lands directly in the point cloud as a pose error.  It needs joint
+  state time-synchronised to the lidar clock, or the cloud smears whenever the
+  boom is moving, which is most of the time.  A fixed cab mount has none of
+  these failure modes.
+mounts:
+  - {sensor: spinning32, link: turret, xyz: [1.72, 0.85, 1.95], label: "cab front"}
+  - {sensor: spinning32, link: boom,   xyz: [2.60, 0.46, 0.92], pitch: 30.0, label: "boom knee"}

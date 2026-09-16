@@ -1,0 +1,13 @@
+# A solid state unit: no moving parts, a bounded window, and much longer range
+# than it can usefully use on a machine this size.  Four of them are needed to
+# get anywhere near the horizontal cover one spinning unit gives for free.
+name: solid_state
+kind: solid_state
+h_fov_deg: 70.0
+v_fov_deg: 70.0
+v_center_deg: 0.0
+min_range_m: 0.3
+max_range_m: 200.0
+n_beams: 128            # 0.55 deg vertically
+h_samples: 350          # 0.2 deg horizontally
+notes: "Range is far beyond the 15 m envelope, so range never binds; the window does."

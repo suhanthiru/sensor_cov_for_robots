@@ -1,0 +1,13 @@
+# A 32 channel spinning lidar of the kind bolted to production machines.
+# The vertical window is biased downward rather than centred on the horizon,
+# because a sensor on a cab roof is looking for ground hazards, not sky.
+name: spinning32
+kind: spinning
+h_fov_deg: 360.0
+v_fov_deg: 45.0
+v_center_deg: -7.5      # so the window runs +15 to -30 degrees
+min_range_m: 0.5        # near blind zone
+max_range_m: 100.0
+n_beams: 32             # 1.45 deg between channels, a 38 cm gap at 15 m
+h_samples: 1800         # 0.2 deg azimuth, a 10 Hz spin
+notes: "Vertical channel spacing is the binding constraint on small targets at range."

@@ -1,0 +1,17 @@
+# A pinhole camera.  It emits nothing, so it is never given a beam table; its
+# detection criterion is pixels on target, which is what actually limits a
+# camera on a small obstacle at range.
+#
+# The field of view is centred on the boresight, which is what a pinhole camera
+# is.  Aiming one at the ground is the mount's job, not the optic's, so the
+# downward tilt lives in the layout as a mount pitch.
+name: camera
+kind: camera
+h_fov_deg: 90.0
+v_fov_deg: 60.0
+v_center_deg: 0.0
+min_range_m: 0.3
+max_range_m: 30.0       # useful detection range, not the range at which pixels exist
+n_beams: 1080           # image rows
+h_samples: 1920         # image columns
+notes: "Useful range is a detection limit, not an optical one."

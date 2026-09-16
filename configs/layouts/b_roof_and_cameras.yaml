@@ -1,0 +1,16 @@
+name: b_roof_and_cameras
+title: "B - one roof lidar and four cameras"
+rationale: >
+  One lidar carries the geometry and four cameras fill in the horizontal gaps
+  cheaply.  The interesting question is whether cameras can be counted as cover
+  at all once pixels on target is the criterion rather than field of view.
+calibration_notes: >
+  Five fixed extrinsics, but two sensing modalities, so the lidar-to-camera
+  extrinsic has to be solved with a target and re-checked after any glass or
+  mount change.
+mounts:
+  - {sensor: spinning32, link: turret, xyz: [0.75, 0.85, 2.02], label: "cab roof"}
+  - {sensor: camera, link: turret, xyz: [1.70, 0.00, 1.20], yaw: 0.0,    pitch: 18.0, label: "front"}
+  - {sensor: camera, link: turret, xyz: [-2.76, 0.00, 1.15], yaw: 180.0, pitch: 18.0, label: "rear"}
+  - {sensor: camera, link: turret, xyz: [0.00, 1.36, 1.20],  yaw: 90.0,  pitch: 18.0, label: "left"}
+  - {sensor: camera, link: turret, xyz: [0.00, -1.36, 1.20], yaw: -90.0, pitch: 18.0, label: "right"}

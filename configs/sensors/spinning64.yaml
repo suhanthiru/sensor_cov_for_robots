@@ -1,0 +1,12 @@
+# The same optic and the same window as spinning32 with twice the channels, so
+# the pair isolates the effect of vertical sampling alone.
+name: spinning64
+kind: spinning
+h_fov_deg: 360.0
+v_fov_deg: 45.0
+v_center_deg: -7.5
+min_range_m: 0.5
+max_range_m: 100.0
+n_beams: 64             # 0.71 deg between channels, a 19 cm gap at 15 m
+h_samples: 1800
+notes: "Halves the vertical gap of spinning32; everything else is identical."
