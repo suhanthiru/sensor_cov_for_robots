@@ -9,6 +9,22 @@ World ``W``
     under the slew axis, so ``z`` is height above grade and the sign of a
     digging depth is unambiguous.
 
+Machine ``M``
+    The frame the study reports in.  Origin on the slew axis at grade, exactly
+    like the world, but yaw-aligned with the turret: ``+x`` is whichever way the
+    upper structure is currently facing.  It is the world frame with the swing
+    angle taken out, ``R_MW = Rz(-swing)``.
+
+    Coverage is a machine-relative property and has to be measured in a
+    machine-relative frame.  Measured in the world instead, swing swamps
+    everything: a cab-mounted sensor sweeps past every fixed point as the
+    machine slews, so almost every cell is seen in some configurations and
+    missed in others, and the persistent-versus-transient split degenerates to
+    "nearly all transient" no matter where the sensors are.  What that would be
+    measuring is that the machine slews, which is not in question.  In ``M`` the
+    swing drops out for anything bolted to the turret, and what is left is the
+    articulation effect the study is actually about.
+
 Chassis ``C``
     Tracks and car body.  Fixed to the world in this study: the machine is
     parked and only the upper structure moves.  ``x`` forward along the tracks,
