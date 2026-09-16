@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from .frames import make_T, rot_y, rot_z, trans
+from .frames import rot_y, rot_z, trans
 from .machine import MachineSpec, boom_foot_T
 
 JOINTS = ("swing", "boom", "stick", "bucket")
@@ -207,7 +207,8 @@ def pose_is_valid(m: MachineSpec, q, grade_tol: float = 0.20, clearance: float =
     """
     poses = link_poses(m, q)
     moving = [s for s in m.solids if s.link in ("stick", "bucket")]
-    static = [s for s in m.solids if s.link == "turret" and s.name in ("cab", "house", "counterweight")]
+    static = [s for s in m.solids if s.link == "turret"
+              and s.name in ("cab", "house", "counterweight")]
 
     # Below grade, judged on the whole bucket rather than just the tooth tip.
     lowest = np.inf

@@ -134,13 +134,14 @@ def band_breakdown(res: SweepResult, env: Envelope = None, edges=(0.0, 2.0, 4.0,
     for lo, hi in zip(edges[:-1], edges[1:]):
         sel = env.band(lo, hi)
         free = sel & ever_free
+        free_m3 = max(env.volume_of(free), 1e-9)
         out.append({
             "band": f"{lo:.0f} to {hi:.0f} m",
             "free_m3": env.volume_of(free),
             "persistent_m3": env.volume_of(sel & persistent),
             "transient_m3": env.volume_of(sel & transient),
-            "persistent_pct": 100.0 * env.volume_of(sel & persistent) / max(env.volume_of(free), 1e-9),
-            "transient_pct": 100.0 * env.volume_of(sel & transient) / max(env.volume_of(free), 1e-9),
+            "persistent_pct": 100.0 * env.volume_of(sel & persistent) / free_m3,
+            "transient_pct": 100.0 * env.volume_of(sel & transient) / free_m3,
         })
     return out
 
