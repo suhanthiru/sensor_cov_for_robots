@@ -263,9 +263,25 @@ def run_sweep(layout_name: str, machine_path=None, quick: bool = False,
         for job in jobs:
             absorb(_run_chunk(job))
     else:
-        with Pool(workers, initializer=_init_worker, initargs=init_args) as pool:
+        # Torn down explicitly rather than with a `with` block.  Pool.__exit__
+        # calls terminate(), which asks workers to die while they may be inside
+        # a long Embree call and does not wait for them; run several layouts in
+        # one process and the leaked pools accumulate.  Twelve workers from an
+        # earlier layout stayed live for over an hour here and halved the
+        # throughput of the one still running, which looks exactly like the
+        # sweep being slow rather than like a leak.  close() lets each worker
+        # finish and exit, join() waits until they actually have, and terminate()
+        # is kept for the error path where waiting is not appropriate.
+        pool = Pool(workers, initializer=_init_worker, initargs=init_args)
+        try:
             for out in pool.imap_unordered(_run_chunk, jobs):
                 absorb(out)
+            pool.close()
+        except BaseException:
+            pool.terminate()
+            raise
+        finally:
+            pool.join()
     if progress:
         print()
 
