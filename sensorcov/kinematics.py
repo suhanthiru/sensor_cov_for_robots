@@ -142,7 +142,47 @@ def _inside_box(pts, size, T) -> np.ndarray:
     return np.all(np.abs(local) <= half, axis=1)
 
 
-def pose_is_valid(m: MachineSpec, q, grade_tol: float = 0.20):
+def boxes_overlap(size_a, T_a, size_b, T_b, margin: float = 0.0) -> bool:
+    """Whether two oriented boxes intersect, by separating axes.
+
+    The obvious cheaper test - are any of B's corners inside A - is wrong in a
+    way that matters here, and it took a buried sensor to notice.  A bucket
+    1.15 m across can engulf a slice of the cab without putting a single one of
+    its own corners inside it, so the corner test reports no interference while
+    the two solids plainly overlap, and anything bolted to the cab front ends up
+    inside the bucket.  Fifteen axes is the exact answer: three faces from each
+    box and the nine edge cross products.
+    """
+    A = np.asarray(T_a, dtype=float)[:3, :3]
+    B = np.asarray(T_b, dtype=float)[:3, :3]
+    a = 0.5 * np.asarray(size_a, dtype=float) + margin
+    b = 0.5 * np.asarray(size_b, dtype=float)
+    t = np.asarray(T_b, dtype=float)[:3, 3] - np.asarray(T_a, dtype=float)[:3, 3]
+
+    R = A.T @ B
+    tA = A.T @ t
+    # The epsilon keeps parallel edges, whose cross product is degenerate, from
+    # reporting a spurious separating axis.
+    absR = np.abs(R) + 1e-9
+
+    for i in range(3):
+        if abs(tA[i]) > a[i] + float(b @ absR[i, :]):
+            return False
+    for j in range(3):
+        if abs(float(tA @ R[:, j])) > float(a @ absR[:, j]) + b[j]:
+            return False
+    for i in range(3):
+        for j in range(3):
+            i1, i2 = (i + 1) % 3, (i + 2) % 3
+            j1, j2 = (j + 1) % 3, (j + 2) % 3
+            ra = a[i1] * absR[i2, j] + a[i2] * absR[i1, j]
+            rb = b[j1] * absR[i, j2] + b[j2] * absR[i, j1]
+            if abs(tA[i2] * R[i1, j] - tA[i1] * R[i2, j]) > ra + rb:
+                return False
+    return True
+
+
+def pose_is_valid(m: MachineSpec, q, grade_tol: float = 0.20, clearance: float = 0.20):
     """Whether one configuration is a state this study can score.
 
     Two rejections, both of them about the scene rather than about the machine.
@@ -151,7 +191,15 @@ def pose_is_valid(m: MachineSpec, q, grade_tol: float = 0.20):
     with no trench cut into it; scoring visibility against a bucket buried in
     solid ground would be meaningless.  And a pose that folds the stick or the
     bucket into the cab or the engine housing is not reachable at all, since the
-    real machine stops on its hydraulic limits before it gets there.
+    real machine stops on its interference limits before it gets there.
+
+    The house is inflated by ``clearance`` before that second test rather than
+    being taken at its own surface.  A real machine keeps the bucket a hand's
+    width off the glass, and without the margin the grid contains poses with the
+    bucket millimetres from the cab.  Those are not merely unrealistic: anything
+    bolted to the cab front is then buried inside the bucket, and the layout
+    gets scored on a sensor that a real installer would never have let the
+    bucket reach.
 
     Returns ``(ok, reason)`` with reason ``""`` when the pose is fine.  Failures
     come back as data rather than exceptions so the sweep can count them and
@@ -169,12 +217,12 @@ def pose_is_valid(m: MachineSpec, q, grade_tol: float = 0.20):
     if lowest < -grade_tol:
         return False, "below_grade"
 
-    # Folded into the house.
+    # Folded into the house, with the house inflated by the clearance margin.
     T_turret = poses["turret"]
     for s in moving:
-        pts = _box_corners(s.size, poses[s.link] @ s.T_link)
+        T_s = poses[s.link] @ s.T_link
         for t in static:
-            if _inside_box(pts, t.size, T_turret @ t.T_link).any():
+            if boxes_overlap(t.size, T_turret @ t.T_link, s.size, T_s, margin=clearance):
                 return False, "self_collision"
     return True, ""
 
