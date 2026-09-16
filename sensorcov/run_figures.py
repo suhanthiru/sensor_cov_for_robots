@@ -17,7 +17,7 @@ from .sensors import Layout
 from .study import LAYOUTS, RESULTS, markdown_table
 from .sweep import SweepResult
 from .viz import (FIGURES, blind_maps, coverage_distributions, detection_polar,
-                  machine_view, pareto_plot)
+                  machine_view, pareto_plot, sampling_limits)
 
 
 def main(argv=None) -> int:
@@ -50,6 +50,7 @@ def main(argv=None) -> int:
     coverage_distributions(sweeps, figures / "coverage_distributions.png")
     detection_polar(sweeps, figures / "detection.png")
     blind_maps(sweeps, figures / "blind_maps.png")
+    sampling_limits(figures / "sampling_limits.png")
 
     m = MachineSpec.load()
     # The two layouts the report argues about: the one with the most persistent
@@ -59,9 +60,10 @@ def main(argv=None) -> int:
             machine_view(m, Layout.load(name), sweeps[name],
                          path=figures / f"machine_{name}_{kind}.png", mask_kind=kind)
 
-    with open(figures.parent / "results" / "table.md", "w") as fh:
+    table = results / "table.md"
+    with open(table, "w") as fh:
         fh.write(markdown_table(rows))
-    print(f"  wrote {results / 'table.md'}")
+    print(f"  wrote {table}")
     return 0
 
 

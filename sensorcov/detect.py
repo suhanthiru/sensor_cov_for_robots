@@ -228,3 +228,45 @@ def detected(scene, layout_poses, cfg: DetectionConfig, targets_xy) -> np.ndarra
         else:
             out |= camera_pixels(scene, T_WS, mo.sensor, targets_xy, cfg) >= cfg.min_pixels
     return out
+
+
+def sampling_limit(spec, cfg: DetectionConfig, ranges):
+    """Where beam sampling, rather than occlusion, is what limits detection.
+
+    The companion to the coverage numbers, and the reason the beam-accurate
+    model is worth having even though the brief's threshold turns out not to
+    bind.  A 1.7 m person inside 15 m is struck by tens of beams, so "at least
+    three returns" is a visibility question in this study and not a sampling
+    one.  Saying that plainly is more useful than reporting a metric that is
+    satisfied everywhere it is not blocked.
+
+    Two different heights are returned, because the obvious one is misleading.
+
+    ``expected`` is the target height at which the expected return count first
+    reaches the threshold, counting rows times columns.  It is optimistic: half
+    a beam row times six columns averages three returns, but a target spanning
+    half a row either catches that row or falls between two, so the real answer
+    is six returns or none depending on where it happens to stand.
+
+    ``guaranteed`` is the height that spans one whole beam row, ``2 r tan(v/2)``.
+    At or above it a row must cross the target whatever its alignment, so
+    detection stops depending on luck.  Vertical spacing is what runs out first
+    on every sensor here, by an order of magnitude: a 32 channel unit puts
+    1.45 degrees between rows and 0.2 degrees between columns.
+
+    The sweep itself models the real beam elevations against the real cylinder,
+    so it already gets the alignment right; this is the analytic companion for
+    the report.
+    """
+    ranges = np.atleast_1d(np.asarray(ranges, dtype=float))
+    heights = np.linspace(0.005, 3.0, 4000)
+
+    expected = np.full(len(ranges), np.nan)
+    for i, r in enumerate(ranges):
+        cols = 2.0 * np.arctan(0.5 * cfg.diameter_m / r) / spec.h_res
+        rows = 2.0 * np.arctan(0.5 * heights / r) / spec.v_res
+        ok = np.flatnonzero(rows * cols >= cfg.min_returns)
+        if ok.size:
+            expected[i] = float(heights[ok[0]])
+    guaranteed = 2.0 * ranges * np.tan(0.5 * spec.v_res)
+    return {"range_m": ranges, "expected_m": expected, "guaranteed_m": guaranteed}

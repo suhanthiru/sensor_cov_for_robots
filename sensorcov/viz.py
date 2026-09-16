@@ -314,3 +314,47 @@ def machine_view(m, layout, res, q=None, path=None, mask_kind="persistent",
                  f"stick {deg[2]:.0f}, bucket {deg[3]:.0f} deg  "
                  f"(triangles are sensors)", fontsize=9, loc="left")
     return _save(fig, path)
+
+
+def sampling_limits(path=None, ranges=None):
+    """What the beam model buys, drawn as the smallest target each sensor resolves.
+
+    The brief's threshold, three returns off a 1.7 m person from 5 m out, is
+    never the binding constraint inside this envelope: a person that far away is
+    struck by tens of beams and the question is only whether anything is in the
+    way.  This figure is where that claim is made visible, and where the
+    constraint that does exist shows up, on short targets.
+    """
+    from .detect import DetectionConfig, sampling_limit
+    from .sensors import SensorSpec
+
+    path = path or FIGURES / "sampling_limits.png"
+    cfg = DetectionConfig()
+    ranges = np.linspace(2.0, 25.0, 200) if ranges is None else np.asarray(ranges)
+
+    fig, ax = plt.subplots(figsize=(6.4, 4.2))
+    colours = {"spinning32": "#c4622d", "spinning64": "#3b6ea5", "solid_state": "#4f8a5b"}
+    for name, colour in colours.items():
+        spec = SensorSpec.load(name)
+        lim = sampling_limit(spec, cfg, ranges)
+        ax.plot(ranges, lim["guaranteed_m"], color=colour, lw=1.8, label=name)
+        ax.plot(ranges, lim["expected_m"], color=colour, lw=1.0, ls=":")
+
+    ax.axhline(cfg.height_m, color="black", lw=1.1, ls="--")
+    ax.annotate(f"a standing person, {cfg.height_m:.1f} m", (2.4, cfg.height_m),
+                textcoords="offset points", xytext=(0, 5), fontsize=8)
+    ax.axvspan(cfg.min_range_m, cfg.max_range_m, color="0.88", zorder=0)
+    ax.annotate("the band this study scores", (0.5 * (cfg.min_range_m + cfg.max_range_m), 0.04),
+                xycoords=("data", "axes fraction"), ha="center", fontsize=8, color="0.35")
+
+    ax.set_xlabel("range (m)")
+    ax.set_ylabel("smallest target height resolved (m)")
+    ax.set_ylim(0, 2.0)
+    ax.set_xlim(ranges.min(), ranges.max())
+    ax.legend(loc="upper left", fontsize=8)
+    ax.set_title("Where beam sampling binds, and where it does not\n"
+                 "solid: a target spanning one whole beam row, so a hit does not "
+                 "depend on alignment\ndotted: where the expected return count "
+                 "first reaches three",
+                 fontsize=9, loc="left")
+    return _save(fig, path)

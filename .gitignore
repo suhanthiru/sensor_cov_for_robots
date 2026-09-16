@@ -8,8 +8,11 @@ build/
 dist/
 .venv/
 
-# Generated artifacts
-results/
+# Generated artifacts.  The sweeps are large and regenerable; the summary they
+# produce is the result of the study, so it is tracked.
+results/*
+!results/study.json
+!results/table.md
 runs/
 *.npz
 *.parquet
