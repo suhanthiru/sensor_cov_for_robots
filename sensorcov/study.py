@@ -97,8 +97,9 @@ def main(argv=None) -> int:
 
     print()
     print(markdown_table(rows))
-    print("* on the Pareto front over coverage up, sensor count down, "
-          "transient blind volume down")
+    print("* on the Pareto front over coverage up and sensor count down; "
+          "transient volume is the colour on the plot, not an axis of the front, "
+          "because a layout that sees little has little of it")
     print()
     for r in rows:
         print(f"  {r['layout']:<22} {r['title']}")

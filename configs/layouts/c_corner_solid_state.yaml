@@ -5,19 +5,28 @@ rationale: >
   which is the widest baseline the machine offers and the only layout here whose
   sensors are not all clustered around the cab.
 
-  Four windows of 70 degrees cannot cover 360, so 80 degrees of azimuth has to
-  be given up somewhere and the aiming is a real design decision rather than a
-  detail.  The front pair are turned inward to 32 degrees so their windows meet
-  on the centreline with a few degrees to spare, and the rear pair likewise, so
-  the gaps fall on the two flanks instead of straight ahead.  Aimed at the
-  corners instead, the gap lands on the centreline directly in front of the
-  machine, which is where the work is; that arrangement scored 37 percent
-  coverage with no overlap anywhere and no dual coverage at all.
+  The aiming is the whole design, and it cannot be made to work.  Four windows
+  of 70 degrees total 280, so at least 80 degrees of azimuth is uncovered
+  before anything else is considered, and the corners make it worse: a unit
+  1.5 m off the centreline sees a narrower span of machine-frame bearing than
+  its own field of view, because near bearings subtend more angle at an offset
+  viewpoint.  Aimed outward along the diagonals the gap lands dead ahead, which
+  is where the work is; that arrangement left 45 percent of bearings uncovered.
+  Aiming each unit at the cardinal direction its corner is nearest to, with a
+  shallower 15 degree tilt so the horizontal window is not spent on the ground
+  close in, brings that to 38 percent and puts the four remaining gaps on the
+  diagonals.
+
+  That is the best this arrangement does, and it is the finding rather than a
+  detail of the setup: no aiming of four 70 degree windows gives this machine
+  redundancy anywhere at all.  Dual coverage is zero under every variant tried,
+  because any overlap has to be bought from a total window that is already 80
+  degrees short of the circle.
 calibration_notes: >
   Four fixed extrinsics, all on the same casting.  More units than A but the
   same kind of calibration problem, solved four times.
 mounts:
-  - {sensor: solid_state, link: turret, xyz: [1.84, 1.52, 1.40],   yaw: 32.0,   pitch: 22.0, label: "front left"}
-  - {sensor: solid_state, link: turret, xyz: [1.84, -1.52, 1.40],  yaw: -32.0,  pitch: 22.0, label: "front right"}
-  - {sensor: solid_state, link: turret, xyz: [-2.97, 1.44, 1.10],  yaw: 148.0,  pitch: 22.0, label: "rear left"}
-  - {sensor: solid_state, link: turret, xyz: [-2.97, -1.44, 1.10], yaw: -148.0, pitch: 22.0, label: "rear right"}
+  - {sensor: solid_state, link: turret, xyz: [1.84, 1.52, 1.40],   yaw: 0.0,   pitch: 15.0, label: "front left"}
+  - {sensor: solid_state, link: turret, xyz: [1.84, -1.52, 1.40],  yaw: -90.0, pitch: 15.0, label: "front right"}
+  - {sensor: solid_state, link: turret, xyz: [-2.97, 1.44, 1.10],  yaw: 90.0,  pitch: 15.0, label: "rear left"}
+  - {sensor: solid_state, link: turret, xyz: [-2.97, -1.44, 1.10], yaw: 180.0, pitch: 15.0, label: "rear right"}
