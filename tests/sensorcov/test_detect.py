@@ -166,3 +166,31 @@ def test_no_sensor_is_buried_inside_the_machine_at_any_pose(m, layout_name):
             gap = float(scene.distance_to(origin.astype(np.float32))[0])
             assert gap >= 0.08, \
                 f"{layout_name}/{mo.label} is {gap:.3f} m from a surface"
+
+
+@pytest.mark.parametrize("sensor_name", ["spinning32", "spinning64", "solid_state"])
+def test_the_azimuth_cull_returns_exactly_what_casting_every_beam_would(cfg, sensor_name):
+    # The cull is the reason the sweep finishes, and it is the kind of
+    # optimisation that is easy to make slightly too tight: a band a fraction
+    # narrower than it should be drops the grazing beams off the edge of the
+    # target, which lowers every return count a little and never looks wrong.
+    # Widening the margin until it covers the whole circle turns the cull off,
+    # so the two answers have to agree exactly.
+    import sensorcov.detect as D
+    from sensorcov.frames import pose_from_rpy
+
+    scene = scene_of([], ground=True)
+    spec = SensorSpec.load(sensor_name)
+    targets = cfg.targets_W()
+
+    for pitch, yaw in ((0.0, 0.0), (22.0, 37.0), (30.0, -110.0)):
+        T_WS = pose_from_rpy([0.4, -0.2, 3.0], pitch_deg=pitch, yaw_deg=yaw)
+        culled = lidar_returns(scene, T_WS, spec, targets, cfg)
+        saved = D.AZ_MARGIN
+        D.AZ_MARGIN = 1e6
+        try:
+            every = lidar_returns(scene, T_WS, spec, targets, cfg)
+        finally:
+            D.AZ_MARGIN = saved
+        assert np.array_equal(culled, every), f"{sensor_name} at pitch {pitch}, yaw {yaw}"
+        assert every.sum() > 0

@@ -82,7 +82,18 @@ class SensorSpec:
         A spinning lidar sweeps the full circle, so its azimuths wrap and the
         last sample is dropped to avoid doubling up on the seam.  A solid state
         unit and a camera span a bounded window and keep both edges.
+
+        Cached, because it is constant in the sensor frame and the sweep asks for
+        it once per sensor per pose: rebuilding a 32 by 1800 table of directions
+        tens of thousands of times costs more than casting the rays does.
         """
+        hit = getattr(self, "_beams", None)
+        if hit is None:
+            hit = self._build_beam_table()
+            object.__setattr__(self, "_beams", hit)
+        return hit
+
+    def _build_beam_table(self):
         v_half = 0.5 * np.radians(self.v_fov_deg)
         v_c = np.radians(self.v_center_deg)
         el = np.linspace(v_c - v_half, v_c + v_half, int(self.n_beams))

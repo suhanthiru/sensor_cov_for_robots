@@ -30,9 +30,12 @@ import numpy as np
 
 # Only rays whose azimuth lands near the target can possibly strike it.  A 0.2 m
 # radius cylinder subtends about 4.6 degrees at 5 m and 1.5 degrees at 15 m, so
-# this cull is worth about two orders of magnitude.  The margin is generous
-# because a tilted mount smears the target across azimuth a little.
-AZ_MARGIN = 3.0
+# this cull is worth about two orders of magnitude.  The factor is a safety
+# margin on that half-angle; it does not need to cover a tilted mount smearing
+# the target across azimuth, because the band is widened by the measured foot to
+# head azimuth spread separately.  A test compares the culled answer against
+# casting every beam at every target and requires them to be identical.
+AZ_MARGIN = 1.35
 
 # The candidate rings sit exactly on the ends of the standoff band, and a radius
 # rebuilt through cos, sin and hypot lands a few ulps either side of the radius
@@ -85,11 +88,14 @@ def lidar_returns(scene, T_WS, spec, targets_xy, cfg: DetectionConfig) -> np.nda
     R_WS = np.asarray(T_WS[:3, :3], dtype=np.float64)
     o_W = np.asarray(T_WS[:3, 3], dtype=np.float64)
 
-    dirs_W = (dirs_S @ R_WS.T).astype(np.float32)
-    origins = np.broadcast_to(o_W.astype(np.float32), dirs_W.shape)
-    t_hit = scene.cast(origins, dirs_W).t_hit.astype(np.float64)   # metres: dirs are unit
+    # Kept in float64 throughout and narrowed to float32 only for the cast, so
+    # the whole table is never copied just to change its width.
+    dirs_W = dirs_S @ R_WS.T
+    flat32 = dirs_W.astype(np.float32)
+    t_hit = scene.cast(np.broadcast_to(o_W.astype(np.float32), flat32.shape),
+                       flat32).t_hit.astype(np.float64)    # metres: dirs are unit
     t_hit = np.where(np.isfinite(t_hit), t_hit, np.inf).reshape(n_el, n_az)
-    dirs_W = dirs_W.reshape(n_el, n_az, 3).astype(np.float64)
+    dirs_W = dirs_W.reshape(n_el, n_az, 3)
 
     # Beam azimuths are wrapped into the same interval arctan2 returns.  A
     # spinning unit generates them over [0, 2pi) while a target azimuth comes
@@ -97,54 +103,90 @@ def lidar_returns(scene, T_WS, spec, targets_xy, cfg: DetectionConfig) -> np.nda
     # beams at all for every target on one side of the machine.
     az_w = _wrap(az)
     rad = cfg.radius_m
-    out = np.zeros(len(targets_xy), dtype=np.int32)
+    targets = np.asarray(targets_xy, dtype=float)
+    n_t = len(targets)
+    out = np.zeros(n_t, dtype=np.int32)
 
-    for i, (cx, cy) in enumerate(np.asarray(targets_xy, dtype=float)):
-        # Range is measured to the target, in the horizontal plane, because the
-        # brief's "from 5 m out" is a standoff on the ground, not a slant range.
-        dxy = float(np.hypot(cx - o_W[0], cy - o_W[1]))
-        if not (cfg.min_range_m - RANGE_EPS <= dxy <= cfg.max_range_m + RANGE_EPS)                 or dxy <= rad:
-            continue
+    # Range is measured horizontally, because the brief's "from 5 m out" is a
+    # standoff on the ground rather than a slant range.
+    dxy = np.hypot(targets[:, 0] - o_W[0], targets[:, 1] - o_W[1])
+    live = ((dxy >= cfg.min_range_m - RANGE_EPS) & (dxy <= cfg.max_range_m + RANGE_EPS)
+            & (dxy > rad))
+    if not live.any():
+        return out
 
-        # Azimuth band, in the sensor frame, taken over both the foot and the
-        # head of the target so a pitched mount cannot slide it out of the band.
-        # Over-selecting here costs a little time and nothing else, because the
-        # analytic test below is exact; under-selecting would lose real returns.
-        half = np.arcsin(min(rad / dxy, 1.0)) * AZ_MARGIN + spec.h_res
-        keep = np.zeros(n_az, dtype=bool)
-        for cz in (0.0, cfg.height_m):
-            v_S = R_WS.T @ (np.array([cx, cy, cz]) - o_W)
-            a_t = np.arctan2(v_S[1], v_S[0])
-            keep |= np.abs(_wrap(az_w - a_t)) <= half
-        cols = np.flatnonzero(keep)
-        if cols.size == 0:
-            continue
+    # Which azimuth columns could possibly strike each target.  Both sensor
+    # kinds sample azimuth uniformly, so the band is a contiguous run of column
+    # indices and can be computed arithmetically.  The obvious version builds a
+    # targets-by-azimuths boolean instead, and that array is the entire cost of
+    # this function: a few hundred targets against 1800 columns dwarfs the ray
+    # cast, which is about a millisecond.
+    #
+    # The foot and the head of the target sit at slightly different azimuths
+    # under a pitched mount, so the band is centred between them and widened by
+    # half their separation, which covers both in one run.  Over-selecting is
+    # free because the intersection below is exact; under-selecting would lose
+    # real returns.
+    idx = np.flatnonzero(live)
+    tg_live = targets[idx]
+    wraps = spec.h_fov_deg >= 359.999
+    az0 = 0.0 if wraps else float(az_w[0])
+    daz = (2 * np.pi / n_az) if wraps else float((az_w[-1] - az_w[0]) / (n_az - 1))
 
-        d = dirs_W[:, cols, :].reshape(-1, 3)
-        t_max = t_hit[:, cols].ravel()
-        ox, oy = o_W[0] - cx, o_W[1] - cy
+    a = []
+    for cz in (0.0, cfg.height_m):
+        v_S = (np.column_stack([tg_live[:, 0], tg_live[:, 1],
+                                np.full(len(idx), cz)]) - o_W) @ R_WS
+        a.append(np.arctan2(v_S[:, 1], v_S[:, 0]))
+    delta = _wrap(a[1] - a[0])
+    a_mid = a[0] + 0.5 * delta
+    half = (np.arcsin(np.minimum(rad / dxy[idx], 1.0)) * AZ_MARGIN
+            + spec.h_res + 0.5 * np.abs(delta))
 
-        # Ray against an infinite vertical cylinder, then clipped to its height.
-        a = d[:, 0] ** 2 + d[:, 1] ** 2
-        b = 2.0 * (d[:, 0] * ox + d[:, 1] * oy)
-        c = ox * ox + oy * oy - rad * rad
-        disc = b * b - 4.0 * a * c
-        live = (disc > 0.0) & (a > 1e-12)
-        if not live.any():
-            continue
-        sq = np.sqrt(disc[live])
-        a_l, b_l = a[live], b[live]
-        t_near = (-b_l - sq) / (2.0 * a_l)
-        t_far = (-b_l + sq) / (2.0 * a_l)
+    k_lo = np.ceil((a_mid - half - az0) / daz)
+    k_hi = np.floor((a_mid + half - az0) / daz)
+    if wraps:
+        n_cols = np.minimum(k_hi - k_lo + 1.0, n_az)
+    else:
+        k_lo = np.maximum(k_lo, 0.0)
+        k_hi = np.minimum(k_hi, n_az - 1.0)
+        n_cols = k_hi - k_lo + 1.0
+    n_cols = np.maximum(n_cols, 0.0).astype(np.int64)
+    if n_cols.sum() == 0:
+        return out
 
-        d_l, tm = d[live], t_max[live]
-        oz = o_W[2]
-        got = np.zeros(live.sum(), dtype=bool)
-        for t in (t_near, t_far):
-            z = oz + t * d_l[:, 2]
-            got |= (t > 0.0) & (t < tm) & (z >= 0.0) & (z <= cfg.height_m)
-        out[i] = int(got.sum())
-    return out
+    # Expand the ragged runs into flat (column, target) pairs without a loop.
+    starts = np.repeat(k_lo.astype(np.int64), n_cols)
+    ends = np.cumsum(n_cols)
+    offs = np.arange(int(ends[-1])) - np.repeat(ends - n_cols, n_cols)
+    cols = starts + offs
+    cols = np.mod(cols, n_az) if wraps else cols
+    tid = np.repeat(idx, n_cols)
+
+    d = np.ascontiguousarray(dirs_W[:, cols, :]).reshape(-1, 3)
+    tm = t_hit[:, cols].ravel()
+    tid_f = np.tile(tid, n_el)
+    ox = o_W[0] - targets[tid_f, 0]
+    oy = o_W[1] - targets[tid_f, 1]
+
+    # Ray against an infinite vertical cylinder, then clipped to its height.
+    a = d[:, 0] ** 2 + d[:, 1] ** 2
+    b = 2.0 * (d[:, 0] * ox + d[:, 1] * oy)
+    c = ox * ox + oy * oy - rad * rad
+    disc = b * b - 4.0 * a * c
+    ok = (disc > 0.0) & (a > 1e-12)
+    if not ok.any():
+        return out
+
+    sq = np.sqrt(disc[ok])
+    a_l, b_l, d_l, tm_l = a[ok], b[ok], d[ok], tm[ok]
+    got = np.zeros(int(ok.sum()), dtype=bool)
+    for t in ((-b_l - sq) / (2.0 * a_l), (-b_l + sq) / (2.0 * a_l)):
+        z = o_W[2] + t * d_l[:, 2]
+        got |= (t > 0.0) & (t < tm_l) & (z >= 0.0) & (z <= cfg.height_m)
+
+    hit_tid = tid_f[ok][got]
+    return np.bincount(hit_tid, minlength=n_t).astype(np.int32)
 
 
 def camera_pixels(scene, T_WS, spec, targets_xy, cfg: DetectionConfig) -> np.ndarray:
