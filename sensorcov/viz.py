@@ -110,8 +110,8 @@ def coverage_distributions(sweeps, path=None):
     path = path or FIGURES / "coverage_distributions.png"
     names = list(sweeps)
     fig, axes = plt.subplots(len(names), 1, figsize=(6.4, 1.5 * len(names) + 1.1),
-                             sharex=True)
-    axes = np.atleast_1d(axes)
+                             sharex=True, squeeze=False)
+    axes = axes[:, 0]
 
     for ax, name in zip(axes, names):
         res = sweeps[name]
@@ -138,20 +138,24 @@ def detection_polar(sweeps, path=None):
 
     Each wedge is one candidate standing position, shaded by the fraction of the
     machine's configurations in which at least three beams come back off them.
-    White is never.  The machine faces along the top of each dial.
+    Dark is never, in any configuration, which is the number that matters: it is
+    a place a person can stand and not be seen whatever the machine is doing.
+    The machine faces the top of each dial.
     """
     path = path or FIGURES / "detection.png"
     names = list(sweeps)
-    fig, axes = plt.subplots(1, len(names), figsize=(3.0 * len(names), 3.5),
-                             subplot_kw={"projection": "polar"})
-    axes = np.atleast_1d(axes)
+    fig, axes = plt.subplots(1, len(names), figsize=(3.4 * len(names), 4.0),
+                             subplot_kw={"projection": "polar"}, squeeze=False)
+    axes = axes[0, :]
+    fig.subplots_adjust(wspace=0.45)
 
-    for ax, name in zip(axes, names):
+    for i, (ax, name) in enumerate(zip(axes, names)):
         res = sweeps[name]
         cfg = res.det_cfg
         radii = np.asarray(cfg["ring_radii"], dtype=float)
         n_az = int(cfg["n_azimuth"])
-        rate = (res.detect_count.astype(float) / max(len(res.poses), 1)).reshape(len(radii), n_az)
+        n_pose = max(len(res.poses), 1)
+        rate = (res.detect_count.astype(float) / n_pose).reshape(len(radii), n_az)
 
         th = np.arange(n_az + 1) * (2 * np.pi / n_az)
         edges = np.concatenate([[radii[0] - 1.25],
@@ -160,17 +164,34 @@ def detection_polar(sweeps, path=None):
         pm = ax.pcolormesh(TH, R, rate, cmap="viridis", vmin=0.0, vmax=1.0,
                            shading="flat")
         ax.set_theta_zero_location("N")
-        ax.set_title(LABEL.get(name, name), fontweight="bold", fontsize=12)
-        ax.set_yticks(radii)
-        ax.set_yticklabels([f"{r:.0f}" for r in radii], fontsize=7)
-        ax.set_xticks(np.radians([0, 90, 180, 270]))
-        ax.set_xticklabels(["front", "left", "rear", "right"], fontsize=7.5)
-        ax.grid(alpha=0.3, color="white", lw=0.5)
+        never = int((res.detect_count == 0).sum())
+        ax.set_title(f"{LABEL.get(name, name)}\n{never} of {rate.size} never seen",
+                     fontweight="bold", fontsize=10, pad=12)
 
-    cb = fig.colorbar(pm, ax=list(axes), fraction=0.025, pad=0.04)
-    cb.set_label("fraction of configurations in which a person here is detected")
-    fig.suptitle("A 1.7 m person on the ground, 5 to 15 m out, needing three returns",
-                 fontsize=9.5, y=1.02)
+        # Radial labels off the vertical so they do not stack under the title,
+        # and compass labels only on the first dial: repeating them four times
+        # across a tight row is what made them collide with the neighbour.
+        # Only the inner and outer rings are labelled.  Five labels on a dial
+        # this size overlap each other and say nothing the caption does not.
+        ax.set_rlabel_position(292.5)
+        ax.set_yticks(radii)
+        ax.set_yticklabels([f"{r:.0f} m" if r in (radii[0], radii[-1]) else ""
+                            for r in radii], fontsize=7, color="0.92")
+        ax.set_xticks(np.radians([0, 90, 180, 270]))
+        if i == 0:
+            ax.set_xticklabels(["front", "left", "rear", "right"], fontsize=7.5)
+        else:
+            ax.set_xticklabels(["", "", "", ""])
+        ax.tick_params(axis="x", pad=1.5)
+        ax.grid(alpha=0.25, color="white", lw=0.5)
+
+    cb = fig.colorbar(pm, ax=list(axes), fraction=0.02, pad=0.03)
+    cb.set_label("configurations in which a person standing here is detected",
+                 fontsize=8)
+    cb.ax.tick_params(labelsize=7)
+    fig.suptitle("A 1.7 m person on the ground, 5 to 15 m out, needing three returns\n"
+                 "machine frame: the turret faces the top of each dial",
+                 fontsize=9.5, y=1.04)
     return _save(fig, path)
 
 
@@ -189,9 +210,11 @@ def blind_maps(sweeps, path=None):
     """
     path = path or FIGURES / "blind_maps.png"
     names = list(sweeps)
+    # squeeze=False keeps the grid two-dimensional for a single layout too.
+    # Without it matplotlib returns a flat pair of axes and atleast_2d makes it
+    # one row of two rather than two rows of one, which transposes the figure.
     fig, axes = plt.subplots(2, len(names), figsize=(2.9 * len(names), 6.0),
-                             sharex=True, sharey=True)
-    axes = np.atleast_2d(axes)
+                             sharex=True, sharey=True, squeeze=False)
 
     for col, name in enumerate(names):
         res = sweeps[name]
@@ -256,11 +279,18 @@ def _box_faces(size, T):
 
 
 def machine_view(m, layout, res, q=None, path=None, mask_kind="persistent",
-                 max_points=9000, elev=26.0, azim=-58.0):
+                 severity_min=None, max_points=14000, elev=22.0, azim=-62.0):
     """The machine at one configuration with its blind volume drawn around it.
 
     Drawn at the worst configuration in the sweep rather than a tidy one,
     because a picture of the good case is not the point.
+
+    Transient volume is filtered by severity before drawing.  For a layout like
+    D it covers two thirds of the envelope, and every cell of it plotted at once
+    is an even grey fog that shows nothing; the cells blind in most
+    configurations are a far smaller set with real shape to it, and that shape
+    is the boom shadow.  Persistent cells are all severity one by definition, so
+    no filter applies to them.
     """
     path = path or FIGURES / f"machine_{mask_kind}.png"
     if q is None:
@@ -268,10 +298,16 @@ def machine_view(m, layout, res, q=None, path=None, mask_kind="persistent",
 
     env = res.envelope
     persistent, transient, severity, ever_free = classify(res)
-    sel = persistent if mask_kind == "persistent" else transient
+    if mask_kind == "persistent":
+        sel = persistent
+        note = "never covered in any configuration"
+    else:
+        thr = 0.5 if severity_min is None else severity_min
+        sel = transient & (severity >= thr)
+        note = f"blind in at least {100 * thr:.0f}% of configurations"
+
     pts = env.centers_W[sel]
     weight = severity[sel]
-
     rng = np.random.default_rng(0)
     if len(pts) > max_points:
         take = rng.choice(len(pts), max_points, replace=False)
@@ -281,38 +317,50 @@ def machine_view(m, layout, res, q=None, path=None, mask_kind="persistent",
     R_MW = rot_z(-float(q[0]))
     link_T = {k: R_MW @ v for k, v in link_T.items()}
 
-    fig = plt.figure(figsize=(7.2, 5.6))
+    fig = plt.figure(figsize=(7.6, 4.4))
     ax = fig.add_subplot(111, projection="3d")
+    # A 3D axes reserves a bounding box far larger than the cube it draws, so
+    # bbox_inches="tight" cannot recover the margin.  Placed by hand instead.
+    ax.set_position([-0.04, -0.10, 1.06, 1.02])
     cmap = plt.get_cmap("Reds" if mask_kind == "persistent" else "Blues")
-    ax.scatter(pts[:, 0], pts[:, 1], pts[:, 2], s=2.0,
-               c=cmap(0.35 + 0.6 * weight), alpha=0.16, linewidths=0, depthshade=False)
+    if len(pts):
+        ax.scatter(pts[:, 0], pts[:, 1], pts[:, 2], s=5.5,
+                   c=cmap(0.45 + 0.5 * weight), alpha=0.33, linewidths=0,
+                   depthshade=False)
 
-    for s in m.solids:
-        T = np.asarray(link_T[s.link], dtype=float) @ s.T_link
+    for s_ in m.solids:
+        T = np.asarray(link_T[s_.link], dtype=float) @ s_.T_link
         ax.add_collection3d(Poly3DCollection(
-            _box_faces(s.size, T), facecolor="#d8b13a", edgecolor="0.25",
-            linewidths=0.4, alpha=0.97))
+            _box_faces(s_.size, T), facecolor="#c8a233", edgecolor="0.2",
+            linewidths=0.5, alpha=1.0, zorder=20))
 
     for mo, T_WS in layout.poses_W(link_T):
-        p = T_WS[:3, 3]
-        ax.scatter(*p, s=55, color="#1b5e9c", marker="^", depthshade=False, zorder=10)
+        p_ = T_WS[:3, 3]
+        ax.scatter(*p_, s=95, color="#0b3d6b", marker="^", depthshade=False,
+                   edgecolor="white", linewidths=0.7, zorder=40)
 
     lim = env.radius
     ax.set_xlim(-lim, lim)
     ax.set_ylim(-lim, lim)
-    ax.set_zlim(0, 2 * env.z_range[1])
-    ax.set_box_aspect((1, 1, 0.42))
+    ax.set_zlim(0.0, env.z_range[1])
+    # The envelope is 30 m across and 6 m tall; drawn to scale it is a pancake,
+    # so the vertical is stretched to roughly three times true scale to make the
+    # layering legible.  Stated here because an unlabelled exaggeration is a lie.
+    ax.set_box_aspect((1.0, 1.0, 0.62))
     ax.view_init(elev=elev, azim=azim)
-    ax.set_xlabel("x (m)", fontsize=8)
-    ax.set_ylabel("y (m)", fontsize=8)
-    ax.set_zlabel("z (m)", fontsize=8)
-    ax.tick_params(labelsize=7)
+    ax.set_xlabel("x (m)", fontsize=8, labelpad=-2)
+    ax.set_ylabel("y (m)", fontsize=8, labelpad=-2)
+    ax.set_zlabel("z (m)", fontsize=8, labelpad=-4)
+    ax.tick_params(labelsize=7, pad=-1)
+    ax.set_zticks([0, 2, 4, 6])
     ax.grid(False)
     deg = np.degrees(q).round(0)
-    ax.set_title(f"{LABEL.get(res.layout, res.layout)}: {mask_kind} blind volume\n"
-                 f"worst configuration, swing {deg[0]:.0f}, boom {deg[1]:.0f}, "
-                 f"stick {deg[2]:.0f}, bucket {deg[3]:.0f} deg  "
-                 f"(triangles are sensors)", fontsize=9, loc="left")
+    ax.set_title(
+        f"{LABEL.get(res.layout, res.layout)}: {mask_kind} blind volume, "
+        f"{note}\nworst configuration: swing {deg[0]:.0f}, boom {deg[1]:.0f}, "
+        f"stick {deg[2]:.0f}, bucket {deg[3]:.0f} deg.  "
+        f"Triangles are sensors; vertical scale exaggerated.",
+        fontsize=8.5, loc="left")
     return _save(fig, path)
 
 
@@ -344,8 +392,10 @@ def sampling_limits(path=None, ranges=None):
     ax.annotate(f"a standing person, {cfg.height_m:.1f} m", (2.4, cfg.height_m),
                 textcoords="offset points", xytext=(0, 5), fontsize=8)
     ax.axvspan(cfg.min_range_m, cfg.max_range_m, color="0.88", zorder=0)
-    ax.annotate("the band this study scores", (0.5 * (cfg.min_range_m + cfg.max_range_m), 0.04),
-                xycoords=("data", "axes fraction"), ha="center", fontsize=8, color="0.35")
+    ax.annotate("the band this study scores",
+                (0.5 * (cfg.min_range_m + cfg.max_range_m), 0.04),
+                xycoords=("data", "axes fraction"), ha="center", fontsize=8,
+                color="0.35")
 
     ax.set_xlabel("range (m)")
     ax.set_ylabel("smallest target height resolved (m)")

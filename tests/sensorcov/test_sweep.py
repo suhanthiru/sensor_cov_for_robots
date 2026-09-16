@@ -132,7 +132,7 @@ def test_severity_is_zero_where_a_cell_was_always_seen(small_sweep):
     persistent, transient, severity, ever_free = classify(small_sweep)
     always = ever_free & (small_sweep.seen_count == small_sweep.free_count)
     assert np.allclose(severity[always], 0.0)
-    assert (severity[persistent] == pytest.approx(1.0)).all()
+    assert np.allclose(severity[persistent], 1.0)
     assert ((severity > 0.0) & (severity < 1.0))[transient].all()
 
 
