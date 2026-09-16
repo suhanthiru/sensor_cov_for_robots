@@ -186,8 +186,9 @@ a minute:
 python -m sensorcov.run_sweep --layout d_cab_and_boom --quick
 ```
 
-The full study, all four layouts. About half an hour per layout across twelve
-worker processes; sweeps are cached as `results/*.npz` and reused:
+The full study, all four layouts. About twenty minutes per layout across twelve
+worker processes, so an hour and a half in total; each sweep is cached as
+`results/<layout>.npz` and reused, so re-running only recomputes what changed:
 
 ```bash
 python -m sensorcov.study --workers 12
