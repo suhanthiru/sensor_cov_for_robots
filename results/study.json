@@ -1,0 +1,502 @@
+{
+  "rows": [
+    {
+      "layout": "a_cab_corners",
+      "title": "A - two spinning lidars at the cab front corners",
+      "n_sensors": 2,
+      "moves_with_the_boom": false,
+      "n_poses": 34368,
+      "coverage_mean": 51.462334394454956,
+      "coverage_worst": 34.791237115859985,
+      "coverage_best": 62.03680634498596,
+      "person_band_mean": 55.83171248435974,
+      "person_band_worst": 35.86420714855194,
+      "dual_coverage_mean": 31.995031237602234,
+      "persistent_blind_m3": 1605.25,
+      "transient_blind_m3": 1274.59375,
+      "transient_severe_m3": 994.4375,
+      "always_seen_m3": 1342.609375,
+      "envelope_free_m3": 4222.453125,
+      "detect_mean": 51.01878046989441,
+      "detect_worst": 31.94444477558136,
+      "positions_always": 109,
+      "positions_never": 150,
+      "worst_position_rate": 0.0,
+      "seconds": 1270.8490194000042
+    },
+    {
+      "layout": "b_roof_and_cameras",
+      "title": "B - one roof lidar and four cameras",
+      "n_sensors": 5,
+      "moves_with_the_boom": false,
+      "n_poses": 34368,
+      "coverage_mean": 79.86002564430237,
+      "coverage_worst": 73.8909661769867,
+      "coverage_best": 85.87587475776672,
+      "person_band_mean": 81.1596691608429,
+      "person_band_worst": 73.79372715950012,
+      "dual_coverage_mean": 29.810351133346558,
+      "persistent_blind_m3": 563.828125,
+      "transient_blind_m3": 795.359375,
+      "transient_severe_m3": 484.3125,
+      "always_seen_m3": 2863.265625,
+      "envelope_free_m3": 4222.453125,
+      "detect_mean": 69.28984522819519,
+      "detect_worst": 62.5,
+      "positions_always": 218,
+      "positions_never": 100,
+      "worst_position_rate": 0.0,
+      "seconds": 1143.0642878000072
+    },
+    {
+      "layout": "c_corner_solid_state",
+      "title": "C - four corner solid-state lidars",
+      "n_sensors": 4,
+      "moves_with_the_boom": false,
+      "n_poses": 34368,
+      "coverage_mean": 49.44305717945099,
+      "coverage_worst": 47.38253355026245,
+      "coverage_best": 50.85574388504028,
+      "person_band_mean": 59.111809730529785,
+      "person_band_worst": 55.7020902633667,
+      "dual_coverage_mean": 0.0,
+      "persistent_blind_m3": 2080.703125,
+      "transient_blind_m3": 228.125,
+      "transient_severe_m3": 119.140625,
+      "always_seen_m3": 1913.625,
+      "envelope_free_m3": 4222.453125,
+      "detect_mean": 50.67155361175537,
+      "detect_worst": 47.22222089767456,
+      "positions_always": 165,
+      "positions_never": 175,
+      "worst_position_rate": 0.0,
+      "seconds": 1266.9171781999903
+    },
+    {
+      "layout": "d_cab_and_boom",
+      "title": "D - cab lidar plus a boom-mounted lidar",
+      "n_sensors": 2,
+      "moves_with_the_boom": true,
+      "n_poses": 34368,
+      "coverage_mean": 70.89595794677734,
+      "coverage_worst": 56.252479553222656,
+      "coverage_best": 84.7895860671997,
+      "person_band_mean": 69.55605149269104,
+      "person_band_worst": 36.7960661649704,
+      "dual_coverage_mean": 17.366917431354523,
+      "persistent_blind_m3": 324.875,
+      "transient_blind_m3": 2751.25,
+      "transient_severe_m3": 1812.1875,
+      "always_seen_m3": 1146.328125,
+      "envelope_free_m3": 4222.453125,
+      "detect_mean": 64.06015753746033,
+      "detect_worst": 33.33333432674408,
+      "positions_always": 85,
+      "positions_never": 78,
+      "worst_position_rate": 0.0,
+      "seconds": 2241.0063623000024
+    }
+  ],
+  "pareto": [
+    "b_roof_and_cameras",
+    "d_cab_and_boom"
+  ],
+  "detail": {
+    "a_cab_corners": {
+      "metrics": {
+        "layout": "a_cab_corners",
+        "title": "A - two spinning lidars at the cab front corners",
+        "n_sensors": 2,
+        "moves_with_the_boom": false,
+        "n_poses": 34368,
+        "coverage_mean": 51.462334394454956,
+        "coverage_worst": 34.791237115859985,
+        "coverage_best": 62.03680634498596,
+        "person_band_mean": 55.83171248435974,
+        "person_band_worst": 35.86420714855194,
+        "dual_coverage_mean": 31.995031237602234,
+        "persistent_blind_m3": 1605.25,
+        "transient_blind_m3": 1274.59375,
+        "transient_severe_m3": 994.4375,
+        "always_seen_m3": 1342.609375,
+        "envelope_free_m3": 4222.453125,
+        "detect_mean": 51.01878046989441,
+        "detect_worst": 31.94444477558136,
+        "positions_always": 109,
+        "positions_never": 150,
+        "worst_position_rate": 0.0,
+        "seconds": 1270.8490194000042
+      },
+      "bands": [
+        {
+          "band": "0 to 2 m",
+          "free_m3": 1400.9375,
+          "persistent_m3": 482.03125,
+          "transient_m3": 445.1875,
+          "persistent_pct": 34.40776265893375,
+          "transient_pct": 31.777827347758198
+        },
+        {
+          "band": "2 to 4 m",
+          "free_m3": 1408.515625,
+          "persistent_m3": 439.765625,
+          "transient_m3": 465.21875,
+          "persistent_pct": 31.221920239613954,
+          "transient_pct": 33.02900881912474
+        },
+        {
+          "band": "4 to 6 m",
+          "free_m3": 1413.0,
+          "persistent_m3": 683.453125,
+          "transient_m3": 364.1875,
+          "persistent_pct": 48.36894019815994,
+          "transient_pct": 25.77406227883935
+        }
+      ],
+      "worst_poses": [
+        {
+          "swing": 90.0,
+          "boom": 19.800000000000008,
+          "stick": -150.0,
+          "bucket": -82.00000000000011,
+          "coverage": 34.791237115859985,
+          "person_band": 37.198495864868164,
+          "detect": 35.277777910232544
+        },
+        {
+          "swing": 180.0,
+          "boom": 19.800000000000008,
+          "stick": -150.0,
+          "bucket": -82.00000000000011,
+          "coverage": 34.791237115859985,
+          "person_band": 37.198495864868164,
+          "detect": 35.277777910232544
+        },
+        {
+          "swing": 270.0,
+          "boom": 19.800000000000008,
+          "stick": -150.0,
+          "bucket": -82.00000000000011,
+          "coverage": 34.791237115859985,
+          "person_band": 37.198495864868164,
+          "detect": 35.277777910232544
+        },
+        {
+          "swing": 0.0,
+          "boom": 19.800000000000008,
+          "stick": -150.0,
+          "bucket": -82.00000000000011,
+          "coverage": 34.791237115859985,
+          "person_band": 37.198495864868164,
+          "detect": 35.277777910232544
+        },
+        {
+          "swing": 135.0,
+          "boom": 19.800000000000008,
+          "stick": -150.0,
+          "bucket": -82.00000000000011,
+          "coverage": 34.79433357715607,
+          "person_band": 37.208494544029236,
+          "detect": 35.277777910232544
+        }
+      ]
+    },
+    "b_roof_and_cameras": {
+      "metrics": {
+        "layout": "b_roof_and_cameras",
+        "title": "B - one roof lidar and four cameras",
+        "n_sensors": 5,
+        "moves_with_the_boom": false,
+        "n_poses": 34368,
+        "coverage_mean": 79.86002564430237,
+        "coverage_worst": 73.8909661769867,
+        "coverage_best": 85.87587475776672,
+        "person_band_mean": 81.1596691608429,
+        "person_band_worst": 73.79372715950012,
+        "dual_coverage_mean": 29.810351133346558,
+        "persistent_blind_m3": 563.828125,
+        "transient_blind_m3": 795.359375,
+        "transient_severe_m3": 484.3125,
+        "always_seen_m3": 2863.265625,
+        "envelope_free_m3": 4222.453125,
+        "detect_mean": 69.28984522819519,
+        "detect_worst": 62.5,
+        "positions_always": 218,
+        "positions_never": 100,
+        "worst_position_rate": 0.0,
+        "seconds": 1143.0642878000072
+      },
+      "bands": [
+        {
+          "band": "0 to 2 m",
+          "free_m3": 1400.9375,
+          "persistent_m3": 223.46875,
+          "transient_m3": 171.703125,
+          "persistent_pct": 15.951371849208119,
+          "transient_pct": 12.256301583760875
+        },
+        {
+          "band": "2 to 4 m",
+          "free_m3": 1408.515625,
+          "persistent_m3": 40.609375,
+          "transient_m3": 273.609375,
+          "persistent_pct": 2.883132730600699,
+          "transient_pct": 19.425370236840646
+        },
+        {
+          "band": "4 to 6 m",
+          "free_m3": 1413.0,
+          "persistent_m3": 299.75,
+          "transient_m3": 350.046875,
+          "persistent_pct": 21.2137296532201,
+          "transient_pct": 24.77331033262562
+        }
+      ],
+      "worst_poses": [
+        {
+          "swing": 90.0,
+          "boom": 49.80000000000001,
+          "stick": -150.0,
+          "bucket": -12.000000000000195,
+          "coverage": 73.8909661769867,
+          "person_band": 81.81736469268799,
+          "detect": 69.72222328186035
+        },
+        {
+          "swing": 180.0,
+          "boom": 49.80000000000001,
+          "stick": -150.0,
+          "bucket": -12.000000000000195,
+          "coverage": 73.8909661769867,
+          "person_band": 81.81736469268799,
+          "detect": 69.72222328186035
+        },
+        {
+          "swing": 270.0,
+          "boom": 49.80000000000001,
+          "stick": -150.0,
+          "bucket": -12.000000000000195,
+          "coverage": 73.8909661769867,
+          "person_band": 81.81736469268799,
+          "detect": 69.72222328186035
+        },
+        {
+          "swing": 0.0,
+          "boom": 49.80000000000001,
+          "stick": -150.0,
+          "bucket": -12.000000000000195,
+          "coverage": 73.8909661769867,
+          "person_band": 81.81736469268799,
+          "detect": 69.72222328186035
+        },
+        {
+          "swing": 135.0,
+          "boom": 49.80000000000001,
+          "stick": -150.0,
+          "bucket": -12.000000000000195,
+          "coverage": 73.89309406280518,
+          "person_band": 81.82591795921326,
+          "detect": 69.72222328186035
+        }
+      ]
+    },
+    "c_corner_solid_state": {
+      "metrics": {
+        "layout": "c_corner_solid_state",
+        "title": "C - four corner solid-state lidars",
+        "n_sensors": 4,
+        "moves_with_the_boom": false,
+        "n_poses": 34368,
+        "coverage_mean": 49.44305717945099,
+        "coverage_worst": 47.38253355026245,
+        "coverage_best": 50.85574388504028,
+        "person_band_mean": 59.111809730529785,
+        "person_band_worst": 55.7020902633667,
+        "dual_coverage_mean": 0.0,
+        "persistent_blind_m3": 2080.703125,
+        "transient_blind_m3": 228.125,
+        "transient_severe_m3": 119.140625,
+        "always_seen_m3": 1913.625,
+        "envelope_free_m3": 4222.453125,
+        "detect_mean": 50.67155361175537,
+        "detect_worst": 47.22222089767456,
+        "positions_always": 165,
+        "positions_never": 175,
+        "worst_position_rate": 0.0,
+        "seconds": 1266.9171781999903
+      },
+      "bands": [
+        {
+          "band": "0 to 2 m",
+          "free_m3": 1400.9375,
+          "persistent_m3": 559.125,
+          "transient_m3": 87.171875,
+          "persistent_pct": 39.91077403524426,
+          "transient_pct": 6.222395717153692
+        },
+        {
+          "band": "2 to 4 m",
+          "free_m3": 1408.515625,
+          "persistent_m3": 638.40625,
+          "transient_m3": 79.671875,
+          "persistent_pct": 45.324754562094405,
+          "transient_pct": 5.656442398358201
+        },
+        {
+          "band": "4 to 6 m",
+          "free_m3": 1413.0,
+          "persistent_m3": 883.171875,
+          "transient_m3": 61.28125,
+          "persistent_pct": 62.50331740976645,
+          "transient_pct": 4.336960368011323
+        }
+      ],
+      "worst_poses": [
+        {
+          "swing": 90.0,
+          "boom": 19.800000000000008,
+          "stick": -140.00000000000003,
+          "bucket": -172.0,
+          "coverage": 47.38253355026245,
+          "person_band": 56.182658672332764,
+          "detect": 48.33333194255829
+        },
+        {
+          "swing": 180.0,
+          "boom": 19.800000000000008,
+          "stick": -140.00000000000003,
+          "bucket": -172.0,
+          "coverage": 47.38253355026245,
+          "person_band": 56.182658672332764,
+          "detect": 48.33333194255829
+        },
+        {
+          "swing": 0.0,
+          "boom": 19.800000000000008,
+          "stick": -140.00000000000003,
+          "bucket": -172.0,
+          "coverage": 47.38253355026245,
+          "person_band": 56.182658672332764,
+          "detect": 48.33333194255829
+        },
+        {
+          "swing": 270.0,
+          "boom": 19.800000000000008,
+          "stick": -140.00000000000003,
+          "bucket": -172.0,
+          "coverage": 47.38253355026245,
+          "person_band": 56.182658672332764,
+          "detect": 48.33333194255829
+        },
+        {
+          "swing": 45.0,
+          "boom": 19.800000000000008,
+          "stick": -140.00000000000003,
+          "bucket": -172.0,
+          "coverage": 47.38675057888031,
+          "person_band": 56.19776248931885,
+          "detect": 48.33333194255829
+        }
+      ]
+    },
+    "d_cab_and_boom": {
+      "metrics": {
+        "layout": "d_cab_and_boom",
+        "title": "D - cab lidar plus a boom-mounted lidar",
+        "n_sensors": 2,
+        "moves_with_the_boom": true,
+        "n_poses": 34368,
+        "coverage_mean": 70.89595794677734,
+        "coverage_worst": 56.252479553222656,
+        "coverage_best": 84.7895860671997,
+        "person_band_mean": 69.55605149269104,
+        "person_band_worst": 36.7960661649704,
+        "dual_coverage_mean": 17.366917431354523,
+        "persistent_blind_m3": 324.875,
+        "transient_blind_m3": 2751.25,
+        "transient_severe_m3": 1812.1875,
+        "always_seen_m3": 1146.328125,
+        "envelope_free_m3": 4222.453125,
+        "detect_mean": 64.06015753746033,
+        "detect_worst": 33.33333432674408,
+        "positions_always": 85,
+        "positions_never": 78,
+        "worst_position_rate": 0.0,
+        "seconds": 2241.0063623000024
+      },
+      "bands": [
+        {
+          "band": "0 to 2 m",
+          "free_m3": 1400.9375,
+          "persistent_m3": 167.28125,
+          "transient_m3": 867.578125,
+          "persistent_pct": 11.94066473343743,
+          "transient_pct": 61.928396163283516
+        },
+        {
+          "band": "2 to 4 m",
+          "free_m3": 1408.515625,
+          "persistent_m3": 77.671875,
+          "transient_m3": 884.484375,
+          "persistent_pct": 5.5144489433690165,
+          "transient_pct": 62.79549614509956
+        },
+        {
+          "band": "4 to 6 m",
+          "free_m3": 1413.0,
+          "persistent_m3": 79.921875,
+          "transient_m3": 999.1875,
+          "persistent_pct": 5.656183651804671,
+          "transient_pct": 70.71390658174097
+        }
+      ],
+      "worst_poses": [
+        {
+          "swing": 0.0,
+          "boom": -20.199999999999996,
+          "stick": -160.0,
+          "bucket": -92.0000000000001,
+          "coverage": 56.252479553222656,
+          "person_band": 52.728271484375,
+          "detect": 46.388888359069824
+        },
+        {
+          "swing": 180.0,
+          "boom": -20.199999999999996,
+          "stick": -160.0,
+          "bucket": -92.0000000000001,
+          "coverage": 56.252479553222656,
+          "person_band": 52.728271484375,
+          "detect": 46.388888359069824
+        },
+        {
+          "swing": 90.0,
+          "boom": -20.199999999999996,
+          "stick": -160.0,
+          "bucket": -92.0000000000001,
+          "coverage": 56.252479553222656,
+          "person_band": 52.728271484375,
+          "detect": 46.388888359069824
+        },
+        {
+          "swing": 270.0,
+          "boom": -20.199999999999996,
+          "stick": -160.0,
+          "bucket": -92.0000000000001,
+          "coverage": 56.252479553222656,
+          "person_band": 52.728271484375,
+          "detect": 46.388888359069824
+        },
+        {
+          "swing": 0.0,
+          "boom": -20.199999999999996,
+          "stick": -160.0,
+          "bucket": -102.0000000000001,
+          "coverage": 56.25438094139099,
+          "person_band": 52.73394584655762,
+          "detect": 46.388888359069824
+        }
+      ]
+    }
+  }
+}

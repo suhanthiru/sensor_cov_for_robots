@@ -17,15 +17,157 @@ So this study sweeps the joint space instead, and splits the blind volume in two
   placement flaw, and the fix is to move or add a sensor.
 - **Transient** blind volume is covered in some configurations and not others.
 
-The transient class is the interesting one, and it is more dangerous than the
-persistent one despite being smaller, for a reason that has nothing to do with
-size. A persistent blind spot is discoverable. Anyone who runs a static coverage
+The transient class is the interesting one, and it is the more dangerous of the
+two for a reason that has nothing to do with how big it is. A persistent blind
+spot is discoverable. Anyone who runs a static coverage
 analysis, or walks around the machine once with a test target, will find it, and
 it can be trained and designed around. A transient one is covered when you look
 and blind when the boom comes down. It is invisible to exactly the analysis most
 people run, and it teaches operators to trust a region that is not always there.
 
-<!-- RESULTS -->
+## Result
+
+Four layouts, 34,368 configurations each, 271,296 cells of work envelope.
+
+| Layout | Sensors | Coverage | Worst pose | Person band | Dual | Persistent | Transient | Detected | Never seen |
+|---|---|---|---|---|---|---|---|---|---|
+| A | 2 | 51.5% | 34.8% | 55.8% | 32.0% | 1605 m3 | 1275 m3 | 51.0% | 150 |
+| B * | 5 | 79.9% | 73.9% | 81.2% | 29.8% | 564 m3 | 795 m3 | 69.3% | 100 |
+| C | 4 | 49.4% | 47.4% | 59.1% | 0.0% | 2081 m3 | 228 m3 | 50.7% | 175 |
+| D * | 2 | 70.9% | 56.3% | 69.6% | 17.4% | 325 m3 | 2751 m3 | 64.1% | 78 |
+
+`*` on the Pareto front over coverage up and sensor count down. "Never seen" is
+how many of the 360 candidate standing positions are never detected in any
+configuration the machine can reach.
+
+![coverage against sensor count](figures/pareto.png)
+
+### The boom mount works, and the mean is the wrong way to read it
+
+D and A carry the same two spinning lidars. The only difference is where the
+second one goes, and it is worth 19 points of coverage: 70.9 percent against
+51.5. More striking is the persistent blind volume, which is the quantity a
+placement is really responsible for. D leaves 325 m3 of the envelope permanently
+unseen. A leaves 1605 m3, five times as much, and B leaves 564 m3 with five
+sensors and two modalities. On the metric that measures whether a sensor
+arrangement has a hole in it, two sensors with one on the boom beat five sensors
+bolted to the house.
+
+That is the case for the boom mount, and it is a real one. The rest of the
+result is the bill.
+
+![blind volume from above](figures/blind_maps.png)
+
+![D's severe transient blind volume](figures/machine_d_cab_and_boom_transient.png)
+
+D converts its persistent blind volume into transient blind volume rather than
+eliminating it. The shape above is the half of it that is blind in most
+configurations rather than a few: a shell over the machine where both sensors'
+vertical windows run out, and a skirt at ground level that the boom unit sweeps
+in and out of as it works. 2751 m3 of the envelope is covered in some configurations and
+not others, three and a half times B's 795 m3, and the effect concentrates
+exactly where it should not: in the 0 to 2 m band where a person stands, 61.9
+percent of the free volume is transient for D against 12.3 percent for B.
+
+So the mean flatters it. Read the worst configuration instead and the ordering
+reverses:
+
+| | mean coverage | worst pose | person band, worst | detection, worst pose |
+|---|---|---|---|---|
+| B, five sensors | 79.9% | 73.9% | 73.8% | 62.5% |
+| D, two sensors | 70.9% | 56.3% | **36.8%** | **33.3%** |
+
+B gives up 6 points between its average and its worst case. D gives up 15, and
+in the person band it gives up 33: at its worst configuration, barely a third of
+the ground-level volume around the machine is covered, and two thirds of the
+places a person could be standing are undetectable. B never drops below 62
+percent on that measure.
+
+![how coverage varies across the sweep](figures/coverage_distributions.png)
+
+### Where each layout's hole is
+
+![where a person is detected](figures/detection.png)
+
+A's failure is structural and the map shows it in one look. The cab on an
+excavator is offset to the left and the boom sits hard against its right face,
+1 cm away in this model. There is nowhere to put a sensor outboard of the cab on
+the boom side, so "two lidars at the cab front corners" means a 0.8 m baseline
+entirely on the left of the machine, and the whole right rear quadrant is never
+covered in any configuration. 150 of 360 standing positions are never detected.
+
+![A's persistent blind volume](figures/machine_a_cab_corners_persistent.png)
+
+C is the most stable layout in the study, varying only 3.5 points across the
+entire sweep, because its corner units are aimed outward and barely see the boom
+at all. It is stable and poor. Four windows of 70 degrees total 280, so 80
+degrees of azimuth is unavailable before anything else is considered, and the
+corners make it worse because a unit 1.5 m off the centreline spans less
+machine-frame bearing than its own field of view. The best aiming found leaves
+38 percent of bearings uncovered and, more damningly, **zero dual coverage
+anywhere**: any overlap has to be bought from a window budget that is already
+short of the circle. C is the only layout here with no redundancy at all.
+
+B is the least interesting and the most defensible. Five sensors, no drama, and
+the flattest worst case of the four.
+
+### What D costs, said plainly
+
+D wins on coverage per sensor and it wins on persistent blind volume. It should
+still not be chosen on this evidence alone, and the reasons do not appear
+anywhere in the table.
+
+Its extrinsic is a function of joint state. A cab-mounted sensor is calibrated
+once at build and stays calibrated until something hits it. The boom unit's pose
+has to be computed from the boom and stick encoders every frame, so every
+forward-kinematics error, every millimetre of pin wear, and every bit of boom
+flex under load lands directly in the point cloud as a pose error. None of that
+is modelled here: this study assumes the boom sensor's pose is known exactly,
+which is precisely the assumption that fails in service.
+
+It needs joint state time-synchronised to the lidar clock. The boom moves
+through most of a working cycle, and a cloud assembled from a moving sensor with
+a stale joint angle smears.
+
+It is also the only sensor in the study that ever drops below the top of the
+tracks. At full boom-down the boom unit sits at 0.71 m against a 0.98 m track,
+and the undercarriage, which does not swing with the house, starts occluding it.
+That is the one place in the whole study where swing angle changes the answer.
+
+And the failure modes compound. D's advantage is that a moving viewpoint fills
+in what a fixed one cannot, which only holds while you know where the viewpoint
+is. Its weakness is that its coverage is already the least consistent of the
+four. Calibration drift degrades exactly the configurations that are already
+worst, which is the opposite of the property you want from a safety-relevant
+sensor.
+
+The defensible reading of the front is that B is the safe answer and D is the
+interesting one: if the calibration problem is solved properly, with encoders
+good enough and synchronisation tight enough to trust, D delivers most of B's
+coverage and less permanent blind volume for two sensors instead of five. If it
+is not solved, D is a layout whose worst case is twice as bad as B's and whose
+error budget is unbounded.
+
+### The safety metric does not bind, and that is worth knowing
+
+The brief asks whether a 1.7 m by 0.4 m cylinder can be hit by at least three
+rays from 5 m out. Inside this envelope that threshold is never the binding
+constraint. At 15 m, the worst case in the band, that target still spans about
+4 beam rows and 8 azimuth columns on the coarsest sensor modelled, so it comes
+back with roughly 34 returns. Every "not detected" in this study is an occlusion
+result, not a sampling one.
+
+That is worth stating rather than reporting a criterion that is satisfied
+everywhere it is not blocked. Sampling does bind, just not on people:
+
+![where beam sampling binds](figures/sampling_limits.png)
+
+A target has to span a whole beam row before a hit stops depending on where it
+happens to be standing relative to the beam pattern. On the 32 channel unit that
+is 0.38 m at 15 m and 0.25 m at 10 m. A standing person clears it everywhere. A
+kerb, a survey peg, a crouching worker, or anything else under about 0.4 m does
+not, beyond roughly 16 m, and for those targets the beam count is the whole
+question. That is a different study, and it would want the 64 channel unit.
 
 ## Running it
 
