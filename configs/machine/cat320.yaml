@@ -1,0 +1,104 @@
+# Cat 320 GC hydraulic excavator, reach boom with the R2.9B1 stick.
+#
+# The file is split by provenance, because the difference matters when reading
+# the results.  Everything under "published" is read off the manufacturer's
+# technical specification (Caterpillar, 320 GC Hydraulic Excavator
+# Specifications, dimensions and working-ranges pages) and is not ours to
+# change.  Everything under "inferred" is an estimate: either a shape the sheet
+# does not dimension, or a parameter fitted so that the chain reproduces the
+# published working ranges.  Which is which is stated per field.
+#
+# The primitive solids in machine.py are derived from these numbers rather than
+# listed separately, so a correction here moves the collision geometry with it.
+#
+# Units: metres, degrees.  Frame: ENU, z up, origin on the ground directly
+# under the slew axis.
+
+name: cat320gc
+source: "Caterpillar 320 GC Hydraulic Excavator Specifications"
+
+# --- published ------------------------------------------------------------
+
+links:
+  boom: 5.70              # m, reach boom, foot pin to stick pin
+  stick: 2.90             # m, R2.9B1, stick pin to bucket pin
+  bucket_tip_radius: 1.57 # m, bucket pin to tooth tip
+
+undercarriage:
+  track_length: 4.45      # m, overall
+  roller_centres: 3.65    # m, length to centre of rollers
+  track_gauge: 2.38       # m, centre to centre
+  shoe_width: 0.60        # m, triple grouser
+  ground_clearance: 0.47  # m, under the car body
+
+upperframe:
+  width: 2.78             # m, upperframe width without walkways
+  tail_swing_radius: 2.83 # m, rear of counterweight to slew axis
+  counterweight_clearance: 1.05  # m, underside of counterweight above ground
+  cab_height: 2.96        # m, top of cab above ground
+  fogs_height: 3.10       # m, top of falling-object guard
+
+# kinematics.working_ranges() must reproduce these from the link lengths, the
+# boom foot position and the joint limits.  That is the test that the chain and
+# its sign conventions are right, and it compares against the manufacturer
+# rather than against ourselves.
+working_ranges:
+  max_reach_ground: 9.86  # m, from the slew axis
+  max_dig_depth: 6.72     # m, below grade
+  max_cut_height: 9.45    # m, above grade
+  max_load_height: 6.49   # m, reported but not asserted
+
+# --- inferred ---------------------------------------------------------------
+
+# The boom foot pin, in the turret frame.  Not dimensioned on the sheet, so it
+# is fitted jointly with the joint limits below against the three published
+# working ranges.  The fit puts the pin 0.31 m forward of the slew axis and
+# 2.12 m above grade, which is where it sits on the real machine, beside and
+# just above the cab floor.
+boom_foot:
+  x: 0.308                # m, forward of the slew axis
+  z: 1.019                # m, above the turret deck
+
+# Not published.  Fitted against the working ranges; the residual is 0.06 m on
+# reach, 0.01 m on depth and 0.06 m on cutting height, which the test asserts.
+# Boom positive is raised, stick and bucket negative are curled in.
+joint_limits:
+  swing:  [-180.0, 180.0]
+  boom:   [-50.2, 61.9]
+  stick:  [-160.0, -32.4]
+  bucket: [-172.0, 8.0]
+
+# Cross sections and lengths the sheet does not dimension.  Occlusion is driven
+# by gross volume, so these only have to be right to a few centimetres to put
+# the shadow in the right place.
+inferred:
+  deck_height: 1.10       # m, turret deck above ground; slew bearing plane
+  track_height: 0.98      # m, ground to top of the track frame
+  car_body_length: 2.60   # m
+  car_body_width: 1.70    # m
+  car_body_height: 0.55   # m
+  house_length: 2.60      # m, engine bay behind the cab
+  house_height: 1.25      # m
+  cab_length: 1.85        # m
+  cab_width: 1.05         # m
+  cab_y: 0.85             # m, cab centreline left of the slew axis
+  counterweight_length: 0.95   # m
+  counterweight_width: 2.60    # m
+  boom_width: 0.62        # m
+  boom_depth: 0.78        # m
+  boom_knee_x: 2.90       # m, along the boom, where the gooseneck breaks
+  boom_knee_z: 0.55       # m, how far the knee stands off the pin-to-pin line
+  stick_width: 0.50       # m
+  stick_depth: 0.68       # m
+  bucket_length: 1.25     # m
+  bucket_width: 1.15      # m
+  bucket_depth: 1.05      # m
+
+# --- the sweep --------------------------------------------------------------
+
+# The articulation grid the sweep walks.  Steps are from the study brief.
+joint_grid:
+  swing_step: 15.0
+  boom_step: 10.0
+  stick_step: 10.0
+  bucket_step: 10.0
